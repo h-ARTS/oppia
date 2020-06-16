@@ -16,6 +16,10 @@
  * @fileoverview Modal and functionality for the create story button.
  */
 
+require(
+  'pages/topic-editor-page/modal-templates/' +
+  'new-story-title-editor-modal.controller.ts');
+
 require('domain/utilities/url-interpolation.service.ts');
 require('pages/topic-editor-page/services/topic-editor-state.service.ts');
 require('services/alerts.service.ts');
@@ -23,11 +27,9 @@ require('services/alerts.service.ts');
 angular.module('oppia').factory('StoryCreationService', [
   '$http', '$uibModal', '$window', 'AlertsService', 'LoaderService',
   'TopicEditorStateService', 'UrlInterpolationService',
-  'MAX_CHARS_IN_STORY_TITLE',
   function(
       $http, $uibModal, $window, AlertsService, LoaderService,
-      TopicEditorStateService, UrlInterpolationService,
-      MAX_CHARS_IN_STORY_TITLE) {
+      TopicEditorStateService, UrlInterpolationService) {
     var STORY_EDITOR_URL_TEMPLATE = '/story_editor/<story_id>';
     var STORY_CREATOR_URL_TEMPLATE = '/topic_editor_story_handler/<topic_id>';
     var storyCreationInProgress = false;
@@ -37,30 +39,13 @@ angular.module('oppia').factory('StoryCreationService', [
         if (storyCreationInProgress) {
           return;
         }
-        var modalInstance = $uibModal.open({
+        $uibModal.open({
           templateUrl: UrlInterpolationService.getDirectiveTemplateUrl(
             '/pages/topic-editor-page/modal-templates/' +
             'new-story-title-editor.template.html'),
           backdrop: true,
-          controller: [
-            '$scope', '$uibModalInstance',
-            function($scope, $uibModalInstance) {
-              $scope.storyTitle = '';
-              $scope.MAX_CHARS_IN_STORY_TITLE = MAX_CHARS_IN_STORY_TITLE;
-              $scope.isStoryTitleEmpty = function(storyTitle) {
-                return (storyTitle === '');
-              };
-              $scope.save = function(storyTitle) {
-                $uibModalInstance.close(storyTitle);
-              };
-              $scope.cancel = function() {
-                $uibModalInstance.dismiss('cancel');
-              };
-            }
-          ]
-        });
-
-        modalInstance.result.then(function(storyTitle) {
+          controller: 'NewStoryTitleEditorModalController'
+        }).result.then(function(storyTitle) {
           if (storyTitle === '') {
             throw new Error('Story title cannot be empty');
           }

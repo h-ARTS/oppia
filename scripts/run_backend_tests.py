@@ -53,14 +53,13 @@ import subprocess
 import sys
 import threading
 import time
+import unittest
 
 import python_utils
 
 from . import common
 from . import concurrent_task_utils
-from . import setup
-from . import setup_gae
-
+from . import install_third_party_libs
 
 DIRS_TO_ADD_TO_SYS_PATH = [
     os.path.join(common.OPPIA_TOOLS_DIR, 'pylint-1.9.4'),
@@ -203,10 +202,7 @@ def _get_all_test_targets(test_path=None, include_load_tests=True):
         python_module = importlib.import_module(test_target_path)
         for name, clazz in inspect.getmembers(
                 python_module, predicate=inspect.isclass):
-            all_base_classes = [base_class.__name__ for base_class in
-                                (inspect.getmro(clazz))]
-            # Check that it is a subclass of 'AppEngineTestBase'.
-            if 'AppEngineTestBase' in all_base_classes:
+            if unittest.TestCase in inspect.getmro(clazz):
                 class_names.append(name)
 
         return [
@@ -242,8 +238,9 @@ def main(args=None):
     """Run the tests."""
     parsed_args = _PARSER.parse_args(args=args)
 
-    setup.main(args=[])
-    setup_gae.main(args=[])
+    # Make sure that third-party libraries are up-to-date before running tests,
+    # otherwise import errors may result.
+    install_third_party_libs.main()
 
     for directory in DIRS_TO_ADD_TO_SYS_PATH:
         if not os.path.exists(os.path.dirname(directory)):
